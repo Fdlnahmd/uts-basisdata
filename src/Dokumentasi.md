@@ -1625,6 +1625,6 @@ class DatabaseSeeder extends Seeder
 2. git add -A (Menambahkan semua file)
 3. git commit -m (Commit)
 4. git push -u origin main(Jika push pertama kali) git push(untuk push berikutnya cukup ini saja)
-5.
+
 
 
