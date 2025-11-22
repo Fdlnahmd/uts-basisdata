@@ -1,11 +1,47 @@
-Dokumentasi UTS Basis data
+# Dokumentasi UTS Basis Data
 
-1. Pastikan Tools sudah terinstall dan sudah di nyalakan.
-2. Buka Docker dan terminal Ubuntu
-3. ketik cd boilerplate, lalu ketik ./start.sh uts-basisdata lalu ketik y dan enter tunggu sampai selesai.
-4. Jika sudah selesai akan diminta buat repositori GitHub ketik y dan selesaikan step nya, Jika sudah maka akan membuka vscode uts-basisdata dan directory name nya menjadi uts-basisdata
-5. lalu di terminal dalam vscode ketik dcm RumahSakit, Poliklinik, Pasien, Dokter, Obat, JadwalPraktek, Kunjungan dan Resep jika sudah berhasil akan muncul file di folder migrations dan seeder
-6. lalu isi Migrations RumahSakit dengan isi berikut
+## Persiapan Awal
+
+### 1. Pastikan Tools Sudah Terinstall
+- Docker
+- Terminal Ubuntu (WSL)
+- VSCode
+
+### 2. Inisialisasi Project
+```bash
+cd boilerplate
+./start.sh uts-basisdata
+```
+- Ketik `y` dan tekan Enter
+- Tunggu sampai selesai
+- Buat repository GitHub jika diminta
+- VSCode akan terbuka otomatis dengan directory `uts-basisdata`
+
+---
+
+## Database Schema
+
+### 3. Buat Migration & Seeder
+Di terminal VSCode, jalankan:
+```bash
+dcm RumahSakit
+dcm Poliklinik
+dcm Pasien
+dcm Dokter
+dcm Obat
+dcm JadwalPraktek
+dcm Kunjungan
+dcm Resep
+```
+
+File akan muncul di folder `migrations` dan `seeders`.
+
+---
+
+## 1. Rumah Sakit
+
+### Migration - `create_rumah_sakits_table.php`
+```php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -14,9 +50,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('rumah_sakits', function (Blueprint $table) {
@@ -34,16 +67,15 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('rumah_sakits');
     }
 };
+```
 
-7. buat factoryRumahSakit dengan isi berikut 
+### Factory - `RumahSakitFactory.php`
+```php
 <?php
 
 namespace Database\Factories;
@@ -52,10 +84,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RumahSakitFactory extends Factory
 {
-    public function definition() : array
+    public function definition(): array
     {
         $cities = ['Jakarta', 'Bandung', 'Surabaya'];
         $provinces = ['DKI Jakarta', 'Jawa Barat', 'Jawa Timur'];
+        
         return [
             'kode_rs' => strtoupper($this->faker->bothify('RS###??')),
             'nama_rs' => $this->faker->company() . ' Hospital',
@@ -69,28 +102,25 @@ class RumahSakitFactory extends Factory
         ];
     }
 }
+```
 
-8. masukan data ke rumah sakit seeder dengan isi berikut
+### Seeder - `RumahSakitSeeder.php`
+```php
 <?php
 
 namespace Database\Seeders;
 
 use App\Models\RumahSakit;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class RumahSakitSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        //ini jika tidak punya data
-        //RumahSakit::factory(3)->create();
+        // Opsi 1: Generate data random
+        // RumahSakit::factory(3)->create();
 
-
-        //ini jika punya data
+        // Opsi 2: Data manual
         $data = [
             [
                 'kode_rs' => 'RS001A',
@@ -115,85 +145,16 @@ class RumahSakitSeeder extends Seeder
                 'tipe_rs' => 'B',
             ]
         ];
+
         foreach ($data as $item) {
             RumahSakit::create($item);
         }
     }
 }
+```
 
-9. masukkan data ke dalam models rumah sakit dengan isi berikut
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class RumahSakit extends Model
-{
-    use HasFactory;
-    protected $guarded = ['id'];
-}
-
-10. isi migrations Poliklinik dengan isi berikut
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('polikliniks', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('rumah_sakit_id')->constrained('rumah_sakits')->cascadeOnDelete();
-            $table->string('kode_poliklinik', 20)->unique();
-            $table->string('nama_poliklinik');
-            $table->string('lantai')->nullable();
-            $table->string('gedung')->nullable();
-            $table->enum('status', ['aktif','nonaktif'])->default('aktif');
-            $table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('polikliniks');
-    }
-};
-
-11.masukkan data ke dalam models poliklinik dengan isi berikut
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-class Poliklinik extends Model
-{
-    use HasFactory;
-
-    protected $fillable = [
-        'rumah_sakit_id',
-        'kode_poliklinik',
-        'nama_poliklinik',
-        'lantai',
-        'gedung',
-        'status',
-    ];
-
-    // Relasi: Poliklinik belong to Rumah Sakit
-    public function rumahSakit(): BelongsTo
-    {
-        return $this->belongsTo(RumahSakit::class);
-    }
-}
-
-12.update models rumah sakit dengan isi berikut
+### Model - `RumahSakit.php`
+```php
 <?php
 
 namespace App\Models;
@@ -224,8 +185,76 @@ class RumahSakit extends Model
         return $this->hasMany(Poliklinik::class);
     }
 }
+```
 
-13. Isi seeder poliklinik dengan isi berikut
+---
+
+## 2. Poliklinik
+
+### Migration - `create_polikliniks_table.php`
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('polikliniks', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('rumah_sakit_id')->constrained('rumah_sakits')->cascadeOnDelete();
+            $table->string('kode_poliklinik', 20)->unique();
+            $table->string('nama_poliklinik');
+            $table->string('lantai')->nullable();
+            $table->string('gedung')->nullable();
+            $table->enum('status', ['aktif','nonaktif'])->default('aktif');
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('polikliniks');
+    }
+};
+```
+
+### Model - `Poliklinik.php`
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Poliklinik extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'rumah_sakit_id',
+        'kode_poliklinik',
+        'nama_poliklinik',
+        'lantai',
+        'gedung',
+        'status',
+    ];
+
+    // Relasi: Poliklinik belongs to Rumah Sakit
+    public function rumahSakit(): BelongsTo
+    {
+        return $this->belongsTo(RumahSakit::class);
+    }
+}
+```
+
+### Seeder - `PoliklinikSeeder.php`
+```php
 <?php
 
 namespace Database\Seeders;
@@ -238,12 +267,11 @@ class PoliklinikSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil ID rumah sakit yang sudah ada
         $rs1 = RumahSakit::where('kode_rs', 'RS001A')->first();
         $rs2 = RumahSakit::where('kode_rs', 'RS001B')->first();
 
         $data = [
-            // Poliklinik untuk RS Sehat Sentosa (RS001A)
+            // Poliklinik RS Sehat Sentosa
             [
                 'rumah_sakit_id' => $rs1->id,
                 'kode_poliklinik' => 'POLI-001',
@@ -277,7 +305,7 @@ class PoliklinikSeeder extends Seeder
                 'status' => 'aktif',
             ],
             
-            // Poliklinik untuk RS Sentosa Sehat (RS001B)
+            // Poliklinik RS Sentosa Sehat
             [
                 'rumah_sakit_id' => $rs2->id,
                 'kode_poliklinik' => 'POLI-005',
@@ -317,39 +345,22 @@ class PoliklinikSeeder extends Seeder
         }
     }
 }
+```
 
-14. update database seeder dengan isi berikut
+### Jalankan Migration & Seeder
+```bash
+dci
+dcm Poliklinik
+```
+
+---
+
+## 3. Dokter
+
+### Migration - `create_dokters_table.php`
+```php
 <?php
 
-namespace Database\Seeders;
-
-use App\Models\RumahSakit;
-use App\Models\Poliklinik;
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-
-class DatabaseSeeder extends Seeder
-{
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        $this->call([
-            RoleSeeder::class,
-            UserSeeder::class,
-            RumahSakitSeeder::class,
-             PoliklinikSeeder::class,
-        ]);
-    }
-}
-
-15. lalu dci dan dcm Poliklinik Kembali
-
-16. Masukan data ke dalam dokter 
-migrations dengan isi berikut
-<?php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -379,9 +390,12 @@ return new class extends Migration
         Schema::dropIfExists('dokters');
     }
 };
+```
 
-17. masukkan data dokter models dengan isi berikut
+### Model - `Dokter.php`
+```php
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -423,8 +437,12 @@ class Dokter extends Model
         return $this->hasMany(Resep::class);
     }
 }
-18.masukkan data ke dalam seeder dokter dengan isi berikut
+```
+
+### Seeder - `DokterSeeder.php`
+```php
 <?php
+
 namespace Database\Seeders;
 
 use App\Models\Dokter;
@@ -492,43 +510,26 @@ class DokterSeeder extends Seeder
         }
     }
 }
-19. update database seeder dengan isi berikut
+```
+
+### Jalankan Migration & Seeder
+```bash
+dci
+dcm Dokter
+```
+
+---
+
+## 4. Pasien
+
+### Migration - `create_pasiens_table.php`
+```php
 <?php
 
-namespace Database\Seeders;
-
-use App\Models\RumahSakit;
-use App\Models\Poliklinik;
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-
-class DatabaseSeeder extends Seeder
-{
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        $this->call([
-            RoleSeeder::class,
-            UserSeeder::class,
-            RumahSakitSeeder::class,
-             PoliklinikSeeder::class,
-	    Dokterseeder::,
-        ]);
-    }
-}
-
-20. lalu dci dan dcm Dokter Kembali
-
-
-21. Masukan data ke dalam pasien 
-migrations dengan isi berikut
-<?php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+
 return new class extends Migration
 {
     public function up(): void
@@ -557,9 +558,17 @@ return new class extends Migration
         Schema::dropIfExists('pasiens');
     }
 };
+```
 
-22. masukkan data pasien models dengan isi berikut
+### Model - `Pasien.php`
+```php
 <?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 class Pasien extends Model
 {
     use HasFactory;
@@ -599,8 +608,10 @@ class Pasien extends Model
         return $this->tanggal_lahir->age;
     }
 }
+```
 
-23.masukkan data ke dalam seeder pasien dengan isi berikut
+### Seeder - `PasienSeeder.php`
+```php
 <?php
 
 namespace Database\Seeders;
@@ -686,51 +697,26 @@ class PasienSeeder extends Seeder
         }
     }
 }
+```
 
-24. update database seeder dengan isi berikut
+### Jalankan Migration & Seeder
+```bash
+dci
+dcm Pasien
+```
+
+---
+
+## 5. Obat
+
+### Migration - `create_obats_table.php`
+```php
 <?php
-
-namespace Database\Seeders;
-
-use App\Models\RumahSakit;
-use App\Models\Poliklinik;
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-
-class DatabaseSeeder extends Seeder
-{
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        $this->call([
-            RoleSeeder::class,
-            UserSeeder::class,
-            RumahSakitSeeder::class,
-             PoliklinikSeeder::class,
-             DokterSeeder::class,
-             PasienSeeder::class,
-        ]);
-    }
-}
-
-
-25. lalu dci dan dcm Pasien Kembali
-
-
-
-26. Masukan data ke dalam obats 
-migrations dengan isi berikut
-<?php
-
-
-27. masukkan data obat models dengan isi berikut<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+
 return new class extends Migration
 {
     public function up(): void
@@ -758,8 +744,52 @@ return new class extends Migration
         Schema::dropIfExists('obats');
     }
 };
+```
 
-28.masukkan data ke dalam seeder obat dengan isi berikut
+### Model - `Obat.php`
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Obat extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'kode_obat',
+        'nama_obat',
+        'kategori',
+        'satuan',
+        'stok',
+        'stok_minimum',
+        'harga_beli',
+        'harga_jual',
+        'tanggal_kadaluarsa',
+        'produsen',
+        'deskripsi',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'tanggal_kadaluarsa' => 'date',
+        'harga_beli' => 'decimal:2',
+        'harga_jual' => 'decimal:2',
+        'is_active' => 'boolean',
+    ];
+
+    public function reseps()
+    {
+        return $this->hasMany(Resep::class);
+    }
+}
+```
+
+### Seeder - `ObatSeeder.php`
+```php
 <?php
 
 namespace Database\Seeders;
@@ -883,47 +913,20 @@ class ObatSeeder extends Seeder
         }
     }
 }
+```
 
+### Jalankan Migration & Seeder
+```bash
+dci
+dcm Obat
+```
 
+---
 
+## 6. Jadwal Praktek
 
-29. update database seeder dengan isi berikut
-<?php
-
-namespace Database\Seeders;
-
-use App\Models\RumahSakit;
-use App\Models\Poliklinik;
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-
-class DatabaseSeeder extends Seeder
-{
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        $this->call([
-            RoleSeeder::class,
-            UserSeeder::class,
-            RumahSakitSeeder::class,
-             PoliklinikSeeder::class,
-             DokterSeeder::class,
-             PasienSeeder::class,
-             ObatSeeder::class,
-        ]);
-    }
-}
-
-
-30. lalu dci dan dcm Obat Kembali
-
-
-
-31. Masukan data ke dalam jadwal praktek 
-migrations dengan isi berikut
+### Migration - `create_jadwal_prakteks_table.php`
+```php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -952,12 +955,13 @@ return new class extends Migration
         Schema::dropIfExists('jadwal_prakteks');
     }
 };
+```
 
-32. masukkan data jadwal praktek models dengan isi berikut
+### Model - `JadwalPraktek.php`
+```php
 <?php
 
 namespace App\Models;
-
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -987,8 +991,10 @@ class JadwalPraktek extends Model
         return $this->belongsTo(Dokter::class);
     }
 }
+```
 
-33.masukkan data ke dalam seeder jadwaln praktek dengan isi berikut
+### Seeder - `JadwalPraktekSeeder.php`
+```php
 <?php
 
 namespace Database\Seeders;
@@ -1031,47 +1037,20 @@ class JadwalPraktekSeeder extends Seeder
         }
     }
 }
+```
 
+### Jalankan Migration & Seeder
+```bash
+dci
+dcm JadwalPraktek
+```
 
+---
 
-34. update database seeder dengan isi berikut
-<?php
+## 7. Kunjungan
 
-namespace Database\Seeders;
-
-use App\Models\RumahSakit;
-use App\Models\Poliklinik;
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-
-class DatabaseSeeder extends Seeder
-{
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        $this->call([
-            RoleSeeder::class,
-            UserSeeder::class,
-            RumahSakitSeeder::class,
-             PoliklinikSeeder::class,
-             DokterSeeder::class,
-             PasienSeeder::class,
-             ObatSeeder::class,
-             JadwalPraktekSeeder::class,
-        ]);
-    }
-}
-
-
-35. lalu dci dan dcm JadwalPraktek Kembali
-
-
-
-36. Masukan data ke dalam Kunjungan 
-migrations dengan isi berikut
+### Migration - `create_kunjungans_table.php`
+```php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -1099,9 +1078,17 @@ return new class extends Migration
             $table->enum('status', ['Menunggu', 'Diperiksa', 'Selesai', 'Batal'])->default('Menunggu');
             $table->timestamps();
         });
-    } }
+    }
 
-37. masukkan data Kunjungan models dengan isi berikut
+    public function down(): void
+    {
+        Schema::dropIfExists('kunjungans');
+    }
+};
+```
+
+### Model - `Kunjungan.php`
+```php
 <?php
 
 namespace App\Models;
@@ -1151,9 +1138,11 @@ class Kunjungan extends Model
     {
         return $this->hasMany(Resep::class);
     }
-};
+}
+```
 
-38.masukkan data ke dalam seeder Kunjungan dengan isi berikut
+### Seeder - `KunjunganSeeder.php`
+```php
 <?php
 
 namespace Database\Seeders;
@@ -1263,46 +1252,20 @@ class KunjunganSeeder extends Seeder
         }
     }
 }
+```
 
-39. update database seeder dengan isi berikut
-<?php
+### Jalankan Migration & Seeder
+```bash
+dci
+dcm Kunjungan
+```
 
-namespace Database\Seeders;
+---
 
-use App\Models\RumahSakit;
-use App\Models\Poliklinik;
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
+## 8. Resep
 
-class DatabaseSeeder extends Seeder
-{
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        $this->call([
-            RoleSeeder::class,
-            UserSeeder::class,
-            RumahSakitSeeder::class,
-             PoliklinikSeeder::class,
-             DokterSeeder::class,
-             PasienSeeder::class,
-             ObatSeeder::class,
-             JadwalPraktekSeeder::class,
-             KunjunganSeeder::class,
-        ]);
-    }
-}
-
-
-40. lalu dci dan dcm Kunjungan Kembali
-
-
-
-41. Masukan data ke dalam Resep 
-migrations dengan isi berikut
+### Migration - `create_reseps_table.php`
+```php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -1336,8 +1299,10 @@ return new class extends Migration
         Schema::dropIfExists('reseps');
     }
 };
+```
 
-42. masukkan data Resep models dengan isi berikut
+### Model - `Resep.php`
+```php
 <?php
 
 namespace App\Models;
@@ -1390,8 +1355,10 @@ class Resep extends Model
         return $this->belongsTo(Obat::class);
     }
 }
+```
 
-43.masukkan data ke dalam seeder Resep dengan isi berikut
+### Seeder - `ResepSeeder.php`
+```php
 <?php
 
 namespace Database\Seeders;
@@ -1404,27 +1371,26 @@ class ResepSeeder extends Seeder
     public function run(): void
     {
         $reseps = [
-            // Resep untuk Kunjungan 1 (Demam Tifoid) - 3 obat = 3 resep
+            // Resep untuk Kunjungan 1 (Demam Tifoid)
             [
                 'no_resep' => 'RSP' . date('Ymd') . '001',
                 'kunjungan_id' => 1,
                 'dokter_id' => 1,
                 'pasien_id' => 1,
-                'obat_id' => 1, // Paracetamol
+                'obat_id' => 1,
                 'jumlah' => 3,
                 'aturan_pakai' => '3x sehari 1 tablet setelah makan',
                 'harga_satuan' => 5000,
                 'subtotal' => 15000,
                 'tanggal_resep' => now()->format('Y-m-d'),
                 'status' => 'Diambil',
-                'catatan' => 'Obat diminum sesuai aturan',
             ],
             [
                 'no_resep' => 'RSP' . date('Ymd') . '002',
                 'kunjungan_id' => 1,
                 'dokter_id' => 1,
                 'pasien_id' => 1,
-                'obat_id' => 2, // Amoxicillin
+                'obat_id' => 2,
                 'jumlah' => 2,
                 'aturan_pakai' => '3x sehari 1 kapsul setelah makan, habiskan',
                 'harga_satuan' => 12000,
@@ -1432,27 +1398,14 @@ class ResepSeeder extends Seeder
                 'tanggal_resep' => now()->format('Y-m-d'),
                 'status' => 'Diambil',
             ],
-            [
-                'no_resep' => 'RSP' . date('Ymd') . '003',
-                'kunjungan_id' => 1,
-                'dokter_id' => 1,
-                'pasien_id' => 1,
-                'obat_id' => 5, // Vitamin C
-                'jumlah' => 1,
-                'aturan_pakai' => '1x sehari 1 tablet setelah makan',
-                'harga_satuan' => 15000,
-                'subtotal' => 15000,
-                'tanggal_resep' => now()->format('Y-m-d'),
-                'status' => 'Diambil',
-            ],
-
+            
             // Resep untuk Kunjungan 2 (ISPA)
             [
-                'no_resep' => 'RSP' . date('Ymd') . '004',
+                'no_resep' => 'RSP' . date('Ymd') . '003',
                 'kunjungan_id' => 2,
                 'dokter_id' => 2,
                 'pasien_id' => 2,
-                'obat_id' => 3, // OBH Combi
+                'obat_id' => 3,
                 'jumlah' => 1,
                 'aturan_pakai' => '3x sehari 1 sendok teh',
                 'harga_satuan' => 22000,
@@ -1461,121 +1414,6 @@ class ResepSeeder extends Seeder
                 'status' => 'Diambil',
                 'catatan' => 'Untuk anak, perhatikan dosis',
             ],
-            [
-                'no_resep' => 'RSP' . date('Ymd') . '005',
-                'kunjungan_id' => 2,
-                'dokter_id' => 2,
-                'pasien_id' => 2,
-                'obat_id' => 7, // CTM
-                'jumlah' => 1,
-                'aturan_pakai' => '3x sehari 1/2 tablet',
-                'harga_satuan' => 3500,
-                'subtotal' => 3500,
-                'tanggal_resep' => now()->format('Y-m-d'),
-                'status' => 'Diambil',
-            ],
-
-            // Resep untuk Kunjungan 3 (Gastritis)
-            [
-                'no_resep' => 'RSP' . date('Ymd', strtotime('-1 day')) . '006',
-                'kunjungan_id' => 3,
-                'dokter_id' => 1,
-                'pasien_id' => 3,
-                'obat_id' => 4, // Antasida
-                'jumlah' => 2,
-                'aturan_pakai' => '3x sehari 1 tablet sebelum makan',
-                'harga_satuan' => 6500,
-                'subtotal' => 13000,
-                'tanggal_resep' => now()->subDays(1)->format('Y-m-d'),
-                'status' => 'Diambil',
-                'catatan' => 'Minum sebelum makan',
-            ],
-            [
-                'no_resep' => 'RSP' . date('Ymd', strtotime('-1 day')) . '007',
-                'kunjungan_id' => 3,
-                'dokter_id' => 1,
-                'pasien_id' => 3,
-                'obat_id' => 1, // Paracetamol
-                'jumlah' => 1,
-                'aturan_pakai' => '3x sehari 1 tablet jika nyeri',
-                'harga_satuan' => 5000,
-                'subtotal' => 5000,
-                'tanggal_resep' => now()->subDays(1)->format('Y-m-d'),
-                'status' => 'Diambil',
-            ],
-
-            // Resep untuk Kunjungan 4 (Kehamilan) - tidak ada resep
-
-            // Resep untuk Kunjungan 5 (Hipertensi)
-            [
-                'no_resep' => 'RSP' . date('Ymd') . '008',
-                'kunjungan_id' => 5,
-                'dokter_id' => 4,
-                'pasien_id' => 5,
-                'obat_id' => 6, // Ibuprofen
-                'jumlah' => 2,
-                'aturan_pakai' => '2x sehari 1 tablet setelah makan',
-                'harga_satuan' => 8000,
-                'subtotal' => 16000,
-                'tanggal_resep' => now()->format('Y-m-d'),
-                'status' => 'Selesai',
-                'catatan' => 'Kontrol tekanan darah setiap minggu',
-            ],
-            [
-                'no_resep' => 'RSP' . date('Ymd') . '009',
-                'kunjungan_id' => 5,
-                'dokter_id' => 4,
-                'pasien_id' => 5,
-                'obat_id' => 5, // Vitamin C
-                'jumlah' => 1,
-                'aturan_pakai' => '1x sehari 1 tablet',
-                'harga_satuan' => 15000,
-                'subtotal' => 15000,
-                'tanggal_resep' => now()->format('Y-m-d'),
-                'status' => 'Selesai',
-            ],
-
-            // Resep untuk Kunjungan 6 (Luka Jahit)
-            [
-                'no_resep' => 'RSP' . date('Ymd', strtotime('-3 days')) . '010',
-                'kunjungan_id' => 6,
-                'dokter_id' => 5,
-                'pasien_id' => 1,
-                'obat_id' => 2, // Amoxicillin
-                'jumlah' => 2,
-                'aturan_pakai' => '3x sehari 1 kapsul, habiskan',
-                'harga_satuan' => 12000,
-                'subtotal' => 24000,
-                'tanggal_resep' => now()->subDays(3)->format('Y-m-d'),
-                'status' => 'Diambil',
-                'catatan' => 'Jaga luka tetap kering dan bersih',
-            ],
-            [
-                'no_resep' => 'RSP' . date('Ymd', strtotime('-3 days')) . '011',
-                'kunjungan_id' => 6,
-                'dokter_id' => 5,
-                'pasien_id' => 1,
-                'obat_id' => 8, // Salep Kulit
-                'jumlah' => 1,
-                'aturan_pakai' => 'Oleskan 2x sehari pada luka',
-                'harga_satuan' => 18000,
-                'subtotal' => 18000,
-                'tanggal_resep' => now()->subDays(3)->format('Y-m-d'),
-                'status' => 'Diambil',
-            ],
-            [
-                'no_resep' => 'RSP' . date('Ymd', strtotime('-3 days')) . '012',
-                'kunjungan_id' => 6,
-                'dokter_id' => 5,
-                'pasien_id' => 1,
-                'obat_id' => 1, // Paracetamol
-                'jumlah' => 1,
-                'aturan_pakai' => '3x sehari 1 tablet jika nyeri',
-                'harga_satuan' => 5000,
-                'subtotal' => 5000,
-                'tanggal_resep' => now()->subDays(3)->format('Y-m-d'),
-                'status' => 'Diambil',
-            ],
         ];
 
         foreach ($reseps as $resep) {
@@ -1583,48 +1421,97 @@ class ResepSeeder extends Seeder
         }
     }
 }
+```
 
-44. update database seeder dengan isi berikut
+### Jalankan Migration & Seeder
+```bash
+dci
+dcm Resep
+```
+
+---
+
+## Database Seeder (Final)
+
+### Update `DatabaseSeeder.php`
+```php
 <?php
 
 namespace Database\Seeders;
 
-use App\Models\RumahSakit;
-use App\Models\Poliklinik;
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
             RumahSakitSeeder::class,
-             PoliklinikSeeder::class,
-             DokterSeeder::class,
-             PasienSeeder::class,
-             ObatSeeder::class,
-             JadwalPraktekSeeder::class,
-             KunjunganSeeder::class,
-             ResepSeeder::class,
+            PoliklinikSeeder::class,
+            DokterSeeder::class,
+            PasienSeeder::class,
+            ObatSeeder::class,
+            JadwalPraktekSeeder::class,
+            KunjunganSeeder::class,
+            ResepSeeder::class,
         ]);
     }
 }
+```
 
+---
 
-45. lalu dci dan dcm Resep Kembali
+## Git Push ke GitHub
 
-46. lakukan git push dengan cara 
-1. git status (Melihat file mana yang berubah/baru/terhapus.)
-2. git add -A (Menambahkan semua file)
-3. git commit -m (Commit)
-4. git push -u origin main(Jika push pertama kali) git push(untuk push berikutnya cukup ini saja)
+### Langkah-langkah:
 
+```bash
+# 1. Cek status file
+git status
 
+# 2. Tambahkan semua file
+git add -A
+
+# 3. Commit dengan pesan
+git commit -m "Add complete hospital database schema with migrations and seeders"
+
+# 4. Push ke GitHub
+# Jika push pertama kali:
+git push -u origin main
+
+# Jika push berikutnya:
+git push
+```
+
+---
+
+## Catatan Penting
+
+- **dcm**: perintah untuk membuat migration dan seeder
+- **dci**: perintah untuk menjalankan migration (db:wipe, migrate, db:seed)
+- Urutan pembuatan tabel harus sesuai relasi (parent table dulu)
+- Foreign key harus merujuk ke tabel yang sudah ada
+
+---
+
+## Struktur Database
+
+```
+rumah_sakits
+├── polikliniks
+
+dokters
+├── jadwal_prakteks
+
+pasiens
+
+obats
+
+kunjungans (relasi ke pasiens, dokters)
+├── reseps (relasi ke kunjungans, dokters, pasiens, obats)
+```
+
+---
 
