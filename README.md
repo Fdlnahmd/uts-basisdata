@@ -1483,35 +1483,3 @@ git push -u origin main
 
 # Jika push berikutnya:
 git push
-```
-
----
-
-## Catatan Penting
-
-- **dcm**: perintah untuk membuat migration dan seeder
-- **dci**: perintah untuk menjalankan migration (db:wipe, migrate, db:seed)
-- Urutan pembuatan tabel harus sesuai relasi (parent table dulu)
-- Foreign key harus merujuk ke tabel yang sudah ada
-
----
-
-## Struktur Database
-
-```
-rumah_sakits
-├── polikliniks
-
-dokters
-├── jadwal_prakteks
-
-pasiens
-
-obats
-
-kunjungans (relasi ke pasiens, dokters)
-├── reseps (relasi ke kunjungans, dokters, pasiens, obats)
-```
-
----
-
